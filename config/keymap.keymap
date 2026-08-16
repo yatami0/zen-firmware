@@ -5,6 +5,28 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
+    macros {
+        // Windows と macOS で IME 切替のキーコードが違うので両方送る。
+        // 相手の OS が知らない方は無視される。
+        //   Windows: 無変換 = INT5 / 変換 = INT4
+        //   macOS  : 英数   = LANG2 / かな = LANG1
+        ime_eisu: ime_eisu {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <10>;
+            tap-ms = <10>;
+            bindings = <&kp INT5 &kp LANG2>;
+        };
+
+        ime_kana: ime_kana {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <10>;
+            tap-ms = <10>;
+            bindings = <&kp INT4 &kp LANG1>;
+        };
+    };
+
     combos {
         compatible = "zmk,combos";
 
@@ -23,7 +45,7 @@
 &kp TAB    &kp Q       &kp W   &kp E     &kp R     &kp T  &kp Y      &kp U     &kp I     &kp O           &kp P           &kp LBKT
 &kp LSHFT  &kp A       &kp S   &kp D     &kp F     &kp G  &kp H      &kp J     &kp K     &kp L           &kp SEMI        &kp SQT
 &kp LCTRL  &kp Z       &kp X   &kp C     &kp V     &kp B  &kp SPACE  &mo 3     &kp N     &kp M           &kp COMMA       &kp DOT          &kp UP_ARROW  &mt RSHFT QUESTION
-&kp LGUI   &kp ESCAPE  &none   &kp LALT  &kp INT5  &mo 2  &kp RET    &kp BSPC  &kp INT4  &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW
+&kp LGUI   &kp ESCAPE  &none   &kp LALT  &ime_eisu  &mo 2  &kp RET    &kp BSPC  &ime_kana  &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW
             >;
         };
 
