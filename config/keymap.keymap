@@ -5,21 +5,6 @@
 #include <dt-bindings/zmk/pointing.h>
 
 / {
-    behaviors {
-        // 右親指 上（単押し Enter / 長押しレイヤー3）用の1キー2役。
-        // quick-tap-ms があるので、単押ししたあと素早く押し直して押しっぱなしにすると
-        // レイヤーに入らず連打になる。
-        // 誤爆するようなら tapping-term-ms を上げ下げして調整する。
-        lt_q: layer_tap_quick {
-            compatible = "zmk,behavior-hold-tap";
-            #binding-cells = <2>;
-            flavor = "balanced";
-            tapping-term-ms = <180>;
-            quick-tap-ms = <200>;
-            bindings = <&mo>, <&kp>;
-        };
-    };
-
     macros {
         // 英数（IME オフ）だけは両 OS のコードを続けて送れる。
         //   Windows: 無変換 = INT5   （LANG2 は Windows では何もしないので無害）
@@ -60,15 +45,16 @@
         //   行3 … かな [ ] ろ           （矢印はレイヤー2・3へ）
         // 押し出された @ と : はレイヤー2 の同じ物理キーに乗せてある
         // （レイヤー2 ＋ BackSpace = @ ／ レイヤー2 ＋ Enter = :）。
-        // 親指は 左上=Space / 左下=レイヤー2（素） / 右上=Enter・長押しL3 / 右下=レイヤー2（素）。
-        // レイヤー2 は左右どちらの親指からでも入れる。単押しでは何も出ない。
+        // 親指は 左上=Space / 左下=レイヤー2 / 右上=かな / 右下=レイヤー3。
+        // Enter は行1の右端、BackSpace は行0の右端にある（親指には無い）。
+        // かなは親指と最下段の2箇所。どちらも Mac モードで LANG1 に差し替わる。
         // ⚠ 行2 右端を _ にしたので右 Shift は無い。左 Shift のみ。
         layer_0 {
             bindings = <
-&kp TAB    &kp Q       &kp W   &kp E     &kp R      &kp T      &kp Y      &kp U        &kp I      &kp O      &kp P      &kp BSPC
-&kp LCTRL  &kp A       &kp S   &kp D     &kp F      &kp G      &kp H      &kp J        &kp K      &kp L      &kp SEMI   &kp RET
-&kp LSHFT  &kp Z       &kp X   &kp C     &kp V      &kp B      &kp SPACE  &lt_q 3 RET  &kp N      &kp M      &kp COMMA  &kp DOT   &kp SLASH  &kp LS(INT1)
-&kp LGUI   &kp ESCAPE  &mo 5   &kp LALT  &ime_eisu  &kp SPACE  &mo 2      &mo 2        &kp INT4   &kp RBKT   &kp NUHS   &kp INT1
+&kp TAB    &kp Q       &kp W   &kp E     &kp R      &kp T      &kp Y      &kp U      &kp I      &kp O      &kp P      &kp BSPC
+&kp LCTRL  &kp A       &kp S   &kp D     &kp F      &kp G      &kp H      &kp J      &kp K      &kp L      &kp SEMI   &kp RET
+&kp LSHFT  &kp Z       &kp X   &kp C     &kp V      &kp B      &kp SPACE  &kp INT4   &kp N      &kp M      &kp COMMA  &kp DOT   &kp SLASH  &kp LS(INT1)
+&kp LGUI   &kp ESCAPE  &mo 5   &kp LALT  &ime_eisu  &kp SPACE  &mo 2      &mo 3      &kp INT4   &kp RBKT   &kp NUHS   &kp INT1
             >;
         };
 
@@ -81,27 +67,34 @@
             >;
         };
 
-        // 数字段＋矢印レイヤー。
-        //   右手 … 標準 JIS の数字段を1行そのまま。8 9 0 の真下に - ^ ¥ が続く。
-        //          右端の上下は @ と : （ベースで BackSpace / Enter がある物理キー）。
-        //   左手 … 1 2 3 の真下に Home ↑ End、そのまた下に ← ↓ →。
-        // 左手の矢印を使うときは右親指の下（BSpc）を長押しして入ると両手に分かれる。
-        // ! " # $ % & ' ( ) = ~ | は Shift を足せば標準どおり出るので専用キーは置かない。
+        // 記号・矢印レイヤー。入口は左親指の下。
+        //   左手 … W E R の段に Home ↑ End、ホーム段（S D F）に ← ↓ →。
+        //          指をホームから動かさずにカーソル移動できる。
+        //   右手 … 最上段の右端に - ^ ¥（標準 JIS の数字段の尻尾）。
+        //          その下に @、さらに下に : （標準 JIS と同じ上下関係）。
+        //   右端の行1・行2 を透過にしてあるので、押さえたまま Enter と BackSpace が使える。
+        // 数字は廃止。Shift を足す記号（! " # $ % など）も同様。
         layer_2 {
             bindings = <
-&kp ESCAPE  &kp N1          &kp N2            &kp N3           &kp N4  &kp N5  &kp N6  &kp N7  &kp N8     &kp N9     &kp N0    &kp LBKT
-&trans      &kp HOME        &kp UP_ARROW      &kp END          &trans  &trans  &trans  &trans  &kp MINUS  &kp EQUAL  &kp INT3  &kp SQT
-&trans      &kp LEFT_ARROW  &kp DOWN_ARROW    &kp RIGHT_ARROW  &trans  &trans  &trans  &trans  &trans     &trans     &trans    &trans   &trans  &trans
-&trans      &trans          &trans            &trans           &trans  &trans  &trans  &trans  &trans     &trans     &trans    &kp DELETE
+&kp ESCAPE  &trans  &kp HOME        &kp UP_ARROW    &kp END          &trans  &trans  &trans  &trans  &kp MINUS  &kp EQUAL  &kp INT3
+&trans      &trans  &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW  &trans  &trans  &trans  &trans  &trans     &kp LBKT   &trans
+&trans      &trans  &trans          &trans          &trans           &trans  &trans  &trans  &trans  &trans     &trans     &trans  &kp SQT  &trans
+&trans      &trans  &trans          &trans          &trans           &trans  &trans  &trans  &trans  &trans     &trans     &kp DELETE
             >;
         };
 
+        // Fn・数字・Bluetooth。入口は右親指の下。
+        // 数字は右手のホームポジションに揃えてある（5 が K、0 が かな の位置）。
+        // ⚠ ここは KP_ ではなく普通の 1〜0。NumLock に左右されず、
+        //   さらに 左Shift を足すだけで ! " # $ % & ' ( ) が標準どおり出る。
+        //   本物のテンキー（KP_）が要るときはレイヤー5 を使う。
+        // 演算子だけは KP_ のまま（JIS でもズレないため）。
         layer_3 {
             bindings = <
-&kp F1        &kp HOME      &kp UP_ARROW     &kp END         &kp F2            &kp F5        &trans        &kp KP_DIVIDE  &kp KP_MULTIPLY  &kp KP_NUMBER_7  &kp KP_NUMBER_8  &kp KP_NUMBER_9
-&trans        &kp LEFT_ARROW &kp DOWN_ARROW  &kp RIGHT_ARROW &kp F11           &kp F12       &kp F3        &trans         &kp KP_MINUS     &kp KP_NUMBER_4  &kp KP_NUMBER_5  &kp KP_NUMBER_6
-&trans        &kp F6        &kp F7           &kp F8          &kp F9            &kp F10       &trans        &trans         &kp F4           &tog 6           &kp LS(LBKT)     &kp KP_NUMBER_1  &kp KP_NUMBER_2  &kp KP_NUMBER_3
-&bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2     &bt BT_SEL 3    &bt BT_SEL 4      &out OUT_USB  &out OUT_BLE  &trans         &trans           &kp KP_NUMBER_0  &kp DOT          &kp KP_EQUAL
+&kp F1        &kp HOME        &kp UP_ARROW    &kp END          &kp F2        &kp F5        &tog 6        &kp N7  &kp N8  &kp N9  &kp KP_DIVIDE    &trans
+&trans        &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW  &kp F11       &kp F12       &kp F3        &kp N4  &kp N5  &kp N6  &kp KP_MULTIPLY  &trans
+&trans        &kp F6          &kp F7          &kp F8           &kp F9        &kp F10       &trans        &trans  &kp F4  &kp N1  &kp N2           &kp N3  &kp KP_MINUS  &trans
+&bt BT_SEL 0  &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3     &bt BT_SEL 4  &out OUT_USB  &out OUT_BLE  &trans  &kp N0  &kp DOT  &kp KP_PLUS     &kp KP_EQUAL
             >;
         };
 
@@ -128,16 +121,16 @@
         };
 
         // Mac モード。入口は レイヤー3 の M の位置にある &tog 6（押すたびに ON/OFF）。
-        // かな だけを macOS 用の LANG1 に差し替える。他は全部透過。
+        // かな 2箇所（右親指 上 と 最下段）を macOS 用の LANG1 に差し替える。他は全部透過。
         // ⚠ 戻し忘れたまま Windows で かな を押すと IME が全く反応しない
         //    （変換を送らなくなるため）。すぐ気づけるので、その場で戻すこと。
         // ⚠ レイヤーの状態は保存されないので、電源を切ると自動的に OFF に戻る。
         layer_6 {
             bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp LANG1   &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans      &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &trans      &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans  &trans      &kp LANG1  &trans   &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans  &trans      &trans  &kp LANG1   &trans  &trans  &trans
             >;
         };
     };
