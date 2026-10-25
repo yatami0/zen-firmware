@@ -6,6 +6,13 @@
 
 / {
     macros {
+        // IME の切替は Windows と macOS でキーコードが違うので、両方を続けて送る。
+        // 知らない方のコードは OS が無視するので、1 つのキーで両 OS に効く。
+        //   英数（IME オフ） Windows: 無変換 = INT5 ／ macOS: 英数 = LANG2
+        //   かな（IME オン） Windows: 変換   = INT4 ／ macOS: かな = LANG1
+        // macOS は INT4 / INT5 を完全に無視するので、&kp INT4 だけだと Mac で かな が効かない。
+        // ⚠ Windows 側で 無変換=IME オフ / 変換=IME オン を IME に設定しておくこと
+        //   （未設定だと 無変換 が入力モードを巡回させる。詳細はローカルの ledger 5.5）。
         ime_eisu: ime_eisu {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
@@ -26,6 +33,7 @@
     combos {
         compatible = "zmk,combos";
 
+        // レイヤー2 を押さえたまま V + B 同時押し = 現在の BT プロファイルのペアリング解除
         bt_clear {
             bindings = <&bt BT_CLR>;
             key-positions = <28 29>;
@@ -36,6 +44,17 @@
     keymap {
         compatible = "zmk,keymap";
 
+        // ベース。
+        //   行0 … Y U I O P BackSpace   （右端の上下が BackSpace / Enter）
+        //   行1 … H J K L ; Enter
+        //   行2 … N M , . / _
+        //   行3 … かな [ ] Alt
+        // 親指は 左上=左クリック / 左下=レイヤー2 / 右上=B / 右下=レイヤー3。
+        // 最下段 左の Esc / L5 だった枠は 中クリック / 右クリック
+        // （トラックボールの自動レイヤー1 が不安定だったので、クリックをベースに置いた）。
+        // かな は最下段の 1 箇所（&ime_kana = 変換 + LANG1 で Windows / macOS 両対応）。
+        // ⚠ 行2 右端を _ にしたので右 Shift は無い。左 Shift のみ。
+        // ⚠ レイヤー5（テンキー）への入口はベースから外れている（L5 の枠を右クリックにしたため）。
         layer_0 {
             bindings = <
 &kp TAB    &kp Q      &kp W      &kp E     &kp R      &kp T      &kp Y      &kp U  &kp I     &kp O     &kp P      &kp BSPC
@@ -45,6 +64,7 @@
             >;
         };
 
+        // マウス。トラックボールを動かすと自動で ON（500ms）。
         layer_1 {
             bindings = <
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans     &mkp MCLK  &trans        &trans       &trans
@@ -54,6 +74,10 @@
             >;
         };
 
+        // 記号・矢印。入口は左親指の下。
+        //   左手 … W E R の段に Home ↑ End、ホーム段（S D F）に ← ↓ →。
+        //   右手 … 最上段の右端に ^ - ¥。その下に @、さらに下に :。
+        //   右端の行1・行2 は透過なので、押さえたまま Enter と BackSpace が使える。
         layer_2 {
             bindings = <
 &kp ESCAPE  &trans  &kp HOME        &kp UP_ARROW    &kp END          &trans  &trans  &trans  &trans  &kp EQUAL  &kp MINUS  &kp INT3
@@ -63,15 +87,21 @@
             >;
         };
 
+        // Fn・数字・Bluetooth。入口は右親指の下。
+        // 数字は右手のホームポジション（5 が K、0 が N の位置）。
+        // KP_ ではなく普通の 1〜0 なので、左Shift を足すと ! " # $ % & ' ( ) が標準どおり出る。
+        // 演算子だけ KP_（JIS でもズレない）。
+        // 最下段の左手が BT プロファイル 0〜4 と 出力先 USB / BLE（左手にしかない）。
         layer_3 {
             bindings = <
-&kp F1        &kp HOME        &kp UP_ARROW    &kp END          &kp F2        &kp F5        &tog 6        &kp N7  &kp N8  &kp N9   &kp KP_DIVIDE    &trans
+&kp F1        &kp HOME        &kp UP_ARROW    &kp END          &kp F2        &kp F5        &trans        &kp N7  &kp N8  &kp N9   &kp KP_DIVIDE    &trans
 &trans        &kp LEFT_ARROW  &kp DOWN_ARROW  &kp RIGHT_ARROW  &kp F11       &kp F12       &kp F3        &kp N4  &kp N5  &kp N6   &kp KP_MULTIPLY  &trans
 &trans        &kp F6          &kp F7          &kp F8           &kp F9        &kp F10       &trans        &trans  &kp N0  &kp N1   &kp N2           &kp N3        &kp KP_MINUS  &trans
 &bt BT_SEL 0  &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3     &bt BT_SEL 4  &out OUT_USB  &out OUT_BLE  &trans  &kp F4  &kp DOT  &kp KP_PLUS      &kp KP_EQUAL
             >;
         };
 
+        // スクロール。レイヤー1 の K の位置を押している間だけ。
         layer_4 {
             bindings = <
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans
@@ -81,21 +111,13 @@
             >;
         };
 
+        // テンキー（KP_）。現在ベースに入口が無い。使うなら &mo 5 をどこかに置く。
         layer_5 {
             bindings = <
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp KP_NUMBER_7  &kp KP_NUMBER_8  &kp KP_NUMBER_9  &kp KP_DIVIDE    &trans
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp KP_NUMBER_4  &kp KP_NUMBER_5  &kp KP_NUMBER_6  &kp KP_MULTIPLY  &trans
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans           &trans           &kp KP_NUMBER_1  &kp KP_NUMBER_2  &kp KP_NUMBER_3  &kp KP_MINUS  &trans
 &trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans           &kp KP_NUMBER_0  &kp KP_DOT       &kp KP_PLUS      &kp KP_EQUAL
-            >;
-        };
-
-        layer_6 {
-            bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans     &trans     &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans     &trans     &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &kp LANG1  &trans     &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans  &trans  &trans     &kp LANG1  &trans  &trans  &trans
             >;
         };
     };
